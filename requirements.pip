@@ -1,3 +1,5 @@
 pushnotify
 mongoengine
 bs4
+pyPdf
+lxml
