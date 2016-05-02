@@ -17,6 +17,8 @@ class User(mongoengine.Document):
     secret_hash = mongoengine.StringField(required=True)
     salt = mongoengine.StringField(required=True)
 
+    pushover_user = mongoengine.StringField()
+
     def __hash__(self):
         return hash(self.email)
 
