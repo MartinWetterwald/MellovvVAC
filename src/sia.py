@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from pyPdf import PdfFileReader
 from pyPdf.utils import PdfReadError
 
-def _sia_get_ctrl_list_url():
+def _get_ctrl_list_url():
     try:
         ret = urllib2.urlopen(config.sia_base + config.sia_link_page)
     except(urllib2.URLError):
@@ -19,8 +19,8 @@ def _sia_get_ctrl_list_url():
 
     return None
 
-def _sia_dl_ctrl_list():
-    url = _sia_get_ctrl_list_url()
+def _dl_ctrl_list():
+    url = _get_ctrl_list_url()
     if not url:
         return False
 
@@ -40,13 +40,13 @@ def _sia_dl_ctrl_list():
     except(IOError, PdfReadError):
         return False
 
-    if pdf.getNumPages() < config.pdf_min_pages:
+    if not config.pdf_pages[0] <= pdf.getNumPages() <= config.pdf_pages[1]:
         return False
 
     return True
 
-def sia_parse_ctrl_list():
-    if not _sia_dl_ctrl_list():
+def parse_ctrl_list():
+    if not _dl_ctrl_list():
         return False
 
     p = subprocess.Popen(["ps2ascii", config.pdf_dst], stdout=subprocess.PIPE)
@@ -55,9 +55,16 @@ def sia_parse_ctrl_list():
         return False
 
     r = re.compile(config.pdf_regex, flags=re.MULTILINE)
+    found = r.findall(txt)
 
-    dic = [m.groupdict() for m in r.finditer(txt, re.MULTILINE)]
-    if len(dic) < config.pdf_min_records:
+    if not config.pdf_records[0] <= len(found) <= config.pdf_records[1]:
         return False
 
-    return dic
+    res = {}
+    for ref, oaci1, oaci2, date in found:
+        res.setdefault(oaci1 if oaci1 else oaci2, []).append({'ref': ref, 'date': date})
+
+    if len(res) < config.pdf_ad[0] or len(res) > config.pdf_ad[1]:
+        return False
+
+    return res
