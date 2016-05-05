@@ -3,3 +3,4 @@ mongoengine
 bs4
 pyPdf
 lxml
+logging
