@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os
-import hashlib
-import mongoengine
+import os, hashlib, mongoengine, config
 from datetime import datetime
+from pushnotify import pushover
 
 def generate_salt():
     return os.urandom(16).encode('base_64')
@@ -18,6 +17,15 @@ class User(mongoengine.Document):
     salt = mongoengine.StringField(required=True)
 
     pushover_user = mongoengine.StringField()
+    subscribedAd = mongoengine.ListField()
+
+    def notify(self, title, msg):
+        if not self.pushover_user:
+            return
+
+        c = pushover.Client(config.pushover_app_token)
+        c.add_key(self.pushover_user)
+        c.notify(msg, title)
 
     def __hash__(self):
         return hash(self.email)
