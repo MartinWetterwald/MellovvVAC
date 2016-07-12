@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import logging, mongoengine, config, sia
+import logging, mongoengine, config, sia, sys
 from model.control_list import ControlList
 from model.user import User
 
@@ -38,6 +38,10 @@ def main():
 
     latest = ControlList.objects.order_by('-date').first()
     new = sia.parse_ctrl_list()
+    if not new:
+        logging.error("An error occurred when fetching control list data.")
+        sys.exit(1)
+
     cl = ControlList(data=new)
     cl.save()
 
